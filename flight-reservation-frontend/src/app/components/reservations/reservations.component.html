@@ -1,0 +1,52 @@
+<div class="container mt-3">
+  <h2>Lista rezerwacji</h2>
+  <div class="table-responsive" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd;">
+
+  <table class="table table-striped">
+    <thead style="position: sticky; top: 0; z-index: 2;">
+      <tr>
+        <th>Imię i Nazwisko</th>
+        <th>Numer lotu</th>
+        <th>Wylot</th>
+        <th>Przylot</th>
+        <th>Klasa</th>
+        <th>Akcje</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let reservation of reservations$ | async">
+        <td>{{ reservation.passengerName }}</td>
+        <td>{{ reservation.flightNumber }}</td>
+        <td>{{ reservation.departureTime | date: 'short' }}</td>
+        <td>{{ reservation.arrivalTime | date: 'short' }}</td>
+        <td>{{ reservation.class }}</td>
+        <td>
+          <button class="btn btn-danger btn-sm m-1" (click)="deleteReservation(reservation.id); $event.stopPropagation()">Usuń</button>
+          <button class="btn btn-primary btn-sm" (click)="viewReservation(reservation); $event.stopPropagation()">Szczegóły</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<div *ngIf="selectedReservation" class="modal fade show d-block" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Szczegóły Rezerwacji</h5>
+        <button type="button" class="btn-close" (click)="closeDetails()"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Imię i Nazwisko:</strong> {{ selectedReservation.passengerName }}</p>
+        <p><strong>Numer Lotu:</strong> {{ selectedReservation.flightNumber }}</p>
+        <p><strong>Data Wylotu:</strong> {{ selectedReservation.departureTime | date: 'medium' }}</p>
+        <p><strong>Data Przylotu:</strong> {{ selectedReservation.arrivalTime | date: 'medium' }}</p>
+        <p><strong>Klasa:</strong> {{ selectedReservation.class }}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDetails()">Zamknij</button>
+      </div>
+    </div>
+  </div>
+</div>

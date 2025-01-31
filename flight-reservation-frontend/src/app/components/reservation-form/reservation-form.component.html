@@ -1,0 +1,75 @@
+<div class="container mt-3">
+  <h2>Dodaj rezerwację</h2>
+
+  @if (errorMessage) {
+    <div class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+  }
+
+  <form [formGroup]="reservationForm" (ngSubmit)="submit()">
+    <div class="mb-3">
+      <label class="form-label">Imię i Nazwisko</label>
+      <input class="form-control" formControlName="passengerName">
+      @if (passengerName?.invalid && (passengerName?.dirty || passengerName?.touched)) {
+        <div class="text-danger">
+          @if (passengerName?.errors?.['required']) {
+            <small>Imię i nazwisko jest wymagane.</small>
+          } @else if (passengerName?.errors?.['minlength']) {
+            <small>Musi zawierać co najmniej 3 znaki.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Numer lotu</label>
+      <input class="form-control" formControlName="flightNumber">
+      @if (flightNumber?.invalid && (flightNumber?.dirty || flightNumber?.touched)) {
+        <div class="text-danger">
+          @if (flightNumber?.errors?.['required']) {
+            <small>Numer lotu jest wymagany.</small>
+          } @else if (flightNumber?.errors?.['pattern']) {
+            <small>Numer lotu może zawierać tylko litery i cyfry.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Wylot</label>
+      <input type="datetime-local" class="form-control" formControlName="departureTime">
+      @if (departureTime?.invalid && (departureTime?.dirty || departureTime?.touched)) {
+        <div class="text-danger">
+          <small>Data wylotu jest wymagana.</small>
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Przylot</label>
+      <input type="datetime-local" class="form-control" formControlName="arrivalTime">
+      @if (arrivalTime?.invalid && (arrivalTime?.dirty || arrivalTime?.touched)) {
+        <div class="text-danger">
+          <small>Data przylotu jest wymagana.</small>
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Klasa</label>
+      <select class="form-select" formControlName="class">
+        <option value="Economy">Ekonomiczna</option>
+        <option value="Business">Biznesowa</option>
+        <option value="First Class">Pierwsza klasa</option>
+      </select>
+      @if (classField?.invalid && (classField?.dirty || classField?.touched)) {
+        <div class="text-danger">
+          <small>Klasa jest wymagana.</small>
+        </div>
+      }
+    </div>
+
+    <button [disabled]="reservationForm.invalid" type="submit" class="btn btn-primary">Dodaj rezerwację</button>
+  </form>
+</div>
