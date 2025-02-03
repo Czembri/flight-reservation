@@ -1,4 +1,5 @@
 ﻿using ReservationAPI.Model;
+using ReservationAPI.Models;
 
 namespace ReservationAPI.Repository.Interfaces
 {
@@ -8,5 +9,6 @@ namespace ReservationAPI.Repository.Interfaces
         Reservation? GetReservation(Guid id);
         void AddReservation(Reservation reservation);
         void DeleteReservation(Guid id);
+        Reservation SaveReservation(Guid id, ReservationRequest updated);
     }
 }

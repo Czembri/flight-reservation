@@ -1,4 +1,6 @@
-﻿using ReservationAPI.Model;
+﻿using AutoMapper;
+using ReservationAPI.Model;
+using ReservationAPI.Models;
 using ReservationAPI.Repository.Interfaces;
 using System.Text.Json;
 
@@ -7,10 +9,12 @@ namespace ReservationAPI.Repository
     public class ReservationRepository : IReservationRepository
     {
         private List<Reservation> _reservations;
+        private readonly IMapper _mapper;
 
-        public ReservationRepository()
+        public ReservationRepository(IMapper mapper)
         {
             _reservations = LoadReservations();
+            _mapper = mapper;
         }
 
         public List<Reservation> GetReservations() => _reservations;
@@ -43,6 +47,33 @@ namespace ReservationAPI.Repository
         {
             var json = JsonSerializer.Serialize(_reservations);
             File.WriteAllText("reservations.json", json);
+        }
+
+        public Reservation SaveReservation(Guid id, ReservationRequest updated)
+        {
+            var existingReservation = GetReservation(id);
+            if (existingReservation == null)
+                throw new KeyNotFoundException();
+
+            if (!DateTime.TryParse(updated.ArrivalTime, out var arrival) ||
+                !DateTime.TryParse(updated.DepartureTime, out var departure))
+            {
+                throw new ArgumentException("Invalid date format");
+            }
+
+            if (arrival <= departure)
+            {
+                throw new ArgumentException("Arrival time cannot be before departure time");
+            }
+
+            _reservations.RemoveAll(r => r.Id == id);
+            
+            _mapper.Map(updated, existingReservation);
+
+            _reservations.Add(existingReservation);
+
+            SaveReservations();
+            return existingReservation;
         }
     }
 }

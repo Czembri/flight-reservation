@@ -1,4 +1,5 @@
 ﻿using Moq;
+using ReservationAPI.Enums;
 using ReservationAPI.Model;
 using ReservationAPI.Repository.Interfaces;
 
@@ -18,20 +19,22 @@ namespace ReservationAPI.Tests.UnitTests
             new Reservation()
             {
                 Id = Guid.NewGuid(),
-                PassengerName = "John Doe",
+                Fname = "John",
+                Lname = "Doe",
                 FlightNumber = "AB123",
                 DepartureTime = DateTime.Parse("2025-02-20T09:00:00Z"),
                 ArrivalTime = DateTime.Parse("2025-02-20T12:00:00Z"),
-                Class = "Business"
+                Class = TicketClass.First
             },
             new Reservation()
             {
                 Id = Guid.NewGuid(),
-                PassengerName = "Jane Smith",
+                Fname = "Jane",
+                Lname = "Smith",
                 FlightNumber = "CD456",
                 DepartureTime = DateTime.Parse("2025-03-15T14:00:00Z"),
                 ArrivalTime = DateTime.Parse("2025-03-15T17:00:00Z"),
-                Class = "Economy"
+                Class = TicketClass.First
             }
         };
 
@@ -56,7 +59,8 @@ namespace ReservationAPI.Tests.UnitTests
             var result = _mockRepo.Object.GetReservation(testId);
 
             Assert.NotNull(result);
-            Assert.Equal("John Doe", result.PassengerName);
+            Assert.Equal("John", result.Fname);
+            Assert.Equal("Doe", result.Lname);
         }
 
         [Fact]
@@ -71,17 +75,18 @@ namespace ReservationAPI.Tests.UnitTests
         {
             var newReservation = new Reservation()
             {
-                PassengerName = "Alice Johnson",
+                Fname = "Alice",
+                Lname = "Johnson",
                 FlightNumber = "CD456",
                 DepartureTime = DateTime.Parse("2025-04-10T10:00:00Z"),
                 ArrivalTime = DateTime.Parse("2025-04-10T13:00:00Z"),
-                Class = "First"
+                Class = TicketClass.First
             };
             _mockRepo.Object.AddReservation(newReservation);
 
             var result = _mockRepo.Object.GetReservations();
             Assert.Equal(3, result.Count);
-            Assert.Contains(result, r => r.PassengerName == "Alice Johnson");
+            Assert.Contains(result, r => r.Fname == "Alice");
         }
 
         [Fact]

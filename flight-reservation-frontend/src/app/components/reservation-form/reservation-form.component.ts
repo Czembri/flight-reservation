@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ReservationService } from '../../services/reservation.service';
 import { Reservation } from '../../models/reservation.model';
 import { CommonModule } from '@angular/common';
@@ -17,12 +17,23 @@ export class ReservationFormComponent {
 
   constructor(private fb: FormBuilder, private reservationService: ReservationService) {
     this.reservationForm = this.fb.group({
-      passengerName: ['', [Validators.required, Validators.minLength(3)]],
+      fname: ['', [Validators.required, Validators.minLength(3)]],
+      lname: ['', [Validators.required, Validators.minLength(3)]],
       flightNumber: ['', [Validators.required, Validators.pattern('^[A-Z0-9]+$')]],
       departureTime: ['', Validators.required],
-      arrivalTime: ['', Validators.required],
-      class: ['', Validators.required],
+      arrivalTime: ['', Validators.required, { validators: this.validateDates }],
+      class: [0, Validators.required],
     });
+  }
+
+  private validateDates(group: AbstractControl): ValidationErrors | null {
+    const departure = group.get('departureTime')?.value;
+    const arrival = group.get('arrivalTime')?.value;
+  
+    if (departure && arrival && new Date(departure) >= new Date(arrival)) {
+      return { invalidDates: true };
+    }
+    return null;
   }
 
   submit(): void {
@@ -34,7 +45,6 @@ export class ReservationFormComponent {
     }
 
     const reservation: Reservation = { ...this.reservationForm.value };
-
     this.reservationService.addReservation(reservation).subscribe({
       next: () => {
         alert('Rezerwacja dodana!');
@@ -47,8 +57,12 @@ export class ReservationFormComponent {
     });
   }
 
-  get passengerName() {
-    return this.reservationForm.get('passengerName');
+  get fname() {
+    return this.reservationForm.get('fname');
+  }
+
+  get lname() {
+    return this.reservationForm.get('lname');
   }
 
   get flightNumber() {

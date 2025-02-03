@@ -9,13 +9,27 @@
 
   <form [formGroup]="reservationForm" (ngSubmit)="submit()">
     <div class="mb-3">
-      <label class="form-label">Imię i Nazwisko</label>
-      <input class="form-control" formControlName="passengerName">
-      @if (passengerName?.invalid && (passengerName?.dirty || passengerName?.touched)) {
+      <label class="form-label">Imię</label>
+      <input class="form-control" formControlName="fname">
+      @if (fname?.invalid && (fname?.dirty || fname?.touched)) {
         <div class="text-danger">
-          @if (passengerName?.errors?.['required']) {
-            <small>Imię i nazwisko jest wymagane.</small>
-          } @else if (passengerName?.errors?.['minlength']) {
+          @if (fname?.errors?.['required']) {
+            <small>Imię jest wymagane.</small>
+          } @else if (fname?.errors?.['minlength']) {
+            <small>Musi zawierać co najmniej 3 znaki.</small>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Nazwisko</label>
+      <input class="form-control" formControlName="lname">
+      @if (lname?.invalid && (lname?.dirty || lname?.touched)) {
+        <div class="text-danger">
+          @if (lname?.errors?.['required']) {
+            <small>Nazwisko jest wymagane.</small>
+          } @else if (lname?.errors?.['minlength']) {
             <small>Musi zawierać co najmniej 3 znaki.</small>
           }
         </div>
@@ -30,7 +44,7 @@
           @if (flightNumber?.errors?.['required']) {
             <small>Numer lotu jest wymagany.</small>
           } @else if (flightNumber?.errors?.['pattern']) {
-            <small>Numer lotu może zawierać tylko litery i cyfry.</small>
+            <small>Numer lotu może zawierać tylko DUŻE litery i cyfry. Np.: A123</small>
           }
         </div>
       }
@@ -54,14 +68,19 @@
           <small>Data przylotu jest wymagana.</small>
         </div>
       }
+      @if (reservationForm.errors?.['invalidDates']) {
+        <div class="text-danger">
+          <small>Data przylotu musi być późniejsza niż data wylotu.</small>
+        </div>
+      }
     </div>
 
     <div class="mb-3">
       <label class="form-label">Klasa</label>
       <select class="form-select" formControlName="class">
-        <option value="Economy">Ekonomiczna</option>
-        <option value="Business">Biznesowa</option>
-        <option value="First Class">Pierwsza klasa</option>
+        <option value="0">Ekonomiczna</option>
+        <option value="1">Biznesowa</option>
+        <option value="2">Pierwsza klasa</option>
       </select>
       @if (classField?.invalid && (classField?.dirty || classField?.touched)) {
         <div class="text-danger">
