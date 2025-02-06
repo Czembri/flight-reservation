@@ -17,7 +17,25 @@ namespace ReservationAPI.Repository
             _mapper = mapper;
         }
 
-        public List<Reservation> GetReservations() => _reservations;
+        public List<Reservation> GetReservations()
+        {
+            var reservations = new List<Reservation>();
+            foreach (var reservation in _reservations)
+            {
+                reservations.Add(new Reservation
+                {
+                    Id = reservation.Id,
+                    Fname = reservation.Fname.Trim(),
+                    Lname = reservation.Lname.Trim(),
+                    FlightNumber = reservation.FlightNumber,
+                    DepartureTime = reservation.DepartureTime,
+                    ArrivalTime = reservation.ArrivalTime,
+                    Class = reservation.Class
+                });
+            }
+
+            return reservations;
+        }
 
         public Reservation? GetReservation(Guid id) => _reservations.Find(r => r.Id == id);
 

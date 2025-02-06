@@ -1,37 +1,46 @@
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Reservation } from '../../models/reservation.model';
-import { map, Observable, switchMap, tap } from 'rxjs';
+import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { Reservation, ReservationFormModel } from '../../models/reservation.model';
+import { catchError, finalize, map, Observable, Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { ReservationService } from '../../services/reservation.service';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
+import { PassengernamePipe } from '../../pipes/passengername.pipe';
+import { FlightClassPipe } from '../../pipes/flight-class.pipe';
 
 @Component({
   selector: 'app-reservations',
   templateUrl: './reservations.component.html',
   styleUrls: ['./reservations.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule,ReactiveFormsModule]
+  imports: [CommonModule, FormsModule,ReactiveFormsModule, PassengernamePipe, FlightClassPipe]
 })
-export class ReservationsComponent {
-  reservations$ = this.reservationService.getReservations().pipe(tap(() => this.updatePagination()));
+export class ReservationsComponent implements OnDestroy {
+  reservations$ = this.reservationService.getReservations().pipe(map((res) => this.updatePagination(res)));
   selectedReservation: Reservation | null = null;
-  editingReservation: Reservation | null = null;
+  editingReservation: ReservationFormModel | null = null;
   editForm: FormGroup;
   paginatedReservations: Reservation[] = [];
   currentPage: number = 1;
-  itemsPerPage: number = 5;
+  itemsPerPage: number = 3;
   Math = Math;
+  totalPages: number = 1;
+  
+  private destroy$ = new Subject<void>();
 
   constructor(private reservationService: ReservationService, private fb: FormBuilder) {
     this.editForm = this.fb.group({
       id: [''],
       fname: ['', [Validators.required, Validators.minLength(3)]],
       lname: ['', [Validators.required, Validators.minLength(3)]],
-      flightNumber: [''],
-      departureTime: [''],
-      arrivalTime: [''],
-      class: ['']
+      flightNumber: ['', [Validators.required, Validators.pattern('^[A-Z0-9]+$')]],
+      departureTime: ['', Validators.required],
+      arrivalTime: ['', Validators.required],
+      class: ['', Validators.required],
     });
+  }
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   sortColumn: string = '';
@@ -45,8 +54,6 @@ sort(column: string): Observable<Reservation[]> {
     this.sortDirection = 'asc';
   }
 
-  this.updatePagination();
-
   return this.reservations$.pipe(tap(reservations => {
     reservations.sort((a, b) => {
       const aValue = (a as any)[column];
@@ -56,7 +63,7 @@ sort(column: string): Observable<Reservation[]> {
       if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
-  }), switchMap(() => this.updatePagination()));
+  }), map(res => this.updatePagination(res)));
 }
 
 
@@ -68,11 +75,19 @@ sort(column: string): Observable<Reservation[]> {
     this.selectedReservation = null;
   }
 
-  editReservation(reservation: Reservation): void {
+  editReservation(reservation: Reservation, lname: string): void {
     this.editForm.reset();
-    this.editingReservation = reservation;
-    
-    this.editForm.patchValue(reservation);
+    this.editingReservation = {
+      ...reservation,
+      lname: lname,
+      class: reservation.class.toString() 
+    };
+    this.editForm.patchValue(this.editingReservation);
+
+    console.warn(this.editingReservation);
+
+    this.editForm.markAsPristine();
+    this.editForm.updateValueAndValidity();
   }
 
   cancelEdit(): void {
@@ -80,14 +95,18 @@ sort(column: string): Observable<Reservation[]> {
   }
 
   updateReservation(): void {
-    if (this.editForm.valid) {
-      const updatedReservation = this.editForm.value;
-      updatedReservation.passengerName = updatedReservation.fname + ' ' + updatedReservation.lname;
-      this.reservationService.updateReservation(updatedReservation.id, updatedReservation).subscribe(() => {
-        this.editingReservation = null;
-        alert('Rezerwacja zaktualizowana!');
-      });
-    }
+    const updatedReservation = this.editForm.value;
+    updatedReservation.class = parseInt(updatedReservation.class, 0)
+    updatedReservation.arrivalTime = new Date(updatedReservation.arrivalTime).toISOString();
+    updatedReservation.departureTime = new Date(updatedReservation.departureTime).toISOString();
+    this.reservationService.updateReservation(updatedReservation.id, updatedReservation)
+    .pipe(switchMap(() => this.reservationService.getReservations()), catchError(err => {
+      console.error(err);
+      return [];
+    }), finalize(() => alert('Rezerwacja zaktualizowana!')))
+    .subscribe(() => {
+      this.editingReservation = null;
+    });
   }
 
   deleteReservation(id: string): void {
@@ -96,14 +115,27 @@ sort(column: string): Observable<Reservation[]> {
     }
   }
 
-  updatePagination(): Observable<Reservation[]> {
+  updatePagination(res: Reservation[]): Reservation[] {
+    this.totalPages = Math.max(1, Math.ceil(res.length / this.itemsPerPage));
     const start = (this.currentPage - 1) * this.itemsPerPage;
     const end = start + this.itemsPerPage;
-    return this.reservations$.pipe(map(reservations => reservations.slice(start, end)));
+    return res.slice(start, end);
   }
+  
+  
 
   goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages) return;
     this.currentPage = page;
-    this.updatePagination();
+    this.reservations$.pipe(takeUntil(this.destroy$), map(res => this.updatePagination(res))).subscribe();
+  }
+  
+
+  get departureTime() {
+    return this.editForm.get('departureTime');
+  }
+
+  get arrivalTime() {
+    return this.editForm.get('arrivalTime');
   }
 }

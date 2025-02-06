@@ -43,8 +43,8 @@ namespace ReservationAPI.Controllers
                         return BadRequest(new { message = $"Invalid class type: {reservation.Class}. Allowed values: Economy=0, Business=1, FirstClass=2" });
                     }
 
-                    var departureTime = DateTimeParser.Parse(reservation.DepartureTime);
-                    var arrivalTime = DateTimeParser.Parse(reservation.ArrivalTime);
+                    var departureTime = DateTimeParser.Parse2(reservation.DepartureTime);
+                    var arrivalTime = DateTimeParser.Parse2(reservation.ArrivalTime);
 
                     if (arrivalTime < departureTime)
                     {

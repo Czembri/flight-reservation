@@ -3,6 +3,7 @@ import { AbstractControl, FormBuilder, FormGroup, FormsModule, ReactiveFormsModu
 import { ReservationService } from '../../services/reservation.service';
 import { Reservation } from '../../models/reservation.model';
 import { CommonModule } from '@angular/common';
+import { parse } from 'node:path';
 
 @Component({
   selector: 'app-reservation-form',
@@ -22,7 +23,7 @@ export class ReservationFormComponent {
       flightNumber: ['', [Validators.required, Validators.pattern('^[A-Z0-9]+$')]],
       departureTime: ['', Validators.required],
       arrivalTime: ['', Validators.required, { validators: this.validateDates }],
-      class: [0, Validators.required],
+      class: [null, Validators.required],
     });
   }
 
@@ -45,6 +46,7 @@ export class ReservationFormComponent {
     }
 
     const reservation: Reservation = { ...this.reservationForm.value };
+    reservation.class = parseInt(reservation.class as any, 0);
     this.reservationService.addReservation(reservation).subscribe({
       next: () => {
         alert('Rezerwacja dodana!');
